@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Tracker</title>
+  <meta name="description" content="A sleek personal payment tracker that saves transactions to Google Sheets." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080b14">
+</head>
+<body>
+
+  <!-- Animated Background -->
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <canvas id="particleCanvas"></canvas>
+  </div>
+
+  <!-- Login Screen -->
+  <div class="login-wrapper" id="loginWrapper">
+    <div class="login-card">
+      <div class="logo-icon login-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="10" fill="url(#logoGradLogin)"/>
+          <path d="M8 12h16M8 16h10M8 20h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="23" cy="20" r="4" fill="white" fill-opacity="0.9"/>
+          <path d="M21.5 20h3M23 18.5v3" stroke="url(#logoGradLogin)" stroke-width="1.5" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="logoGradLogin" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#6366f1"/>
+              <stop offset="1" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h2 class="login-title">Welcome Back</h2>
+      <p class="login-subtitle">Enter your credentials to access the tracker</p>
+      
+      <form class="login-form" id="loginForm">
+        <div class="form-group" style="--delay: 0.1s">
+          <label class="form-label" for="loginUser">Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="loginUser" name="username" class="form-input" placeholder="e.g. Aditya" required autocomplete="username"/>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+        <div class="form-group" style="--delay: 0.2s">
+          <label class="form-label" for="loginPass">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="loginPass" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password"/>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+        <div class="form-group submit-group" style="--delay: 0.3s; margin-top: 12px;">
+          <button type="submit" class="submit-btn" id="loginBtn">
+            <span class="submit-label" id="loginLabel">Sign In</span>
+            <span class="submit-loader" id="loginLoader">
+              <span class="spinner"></span>
+              Verifying…
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-wrapper hidden" id="appWrapper" style="display: none;">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="10" fill="url(#logoGrad)"/>
+            <path d="M8 12h16M8 16h10M8 20h7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="23" cy="20" r="4" fill="white" fill-opacity="0.9"/>
+            <path d="M21.5 20h3M23 18.5v3" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366f1"/>
+                <stop offset="1" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1 class="app-title">Payment Tracker</h1>
+          <p class="app-subtitle">Log your transactions instantly</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Card -->
+    <main class="card" id="trackerCard">
+
+      <!-- Transaction Type Toggle -->
+      <div class="type-toggle-wrapper">
+        <div class="type-toggle" id="typeToggle">
+          <div class="toggle-slider" id="toggleSlider"></div>
+          <button class="toggle-btn active" id="btnDebit" data-type="Debit" onclick="setTransactionType('Debit')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Debit
+          </button>
+          <button class="toggle-btn" id="btnCredit" data-type="Credit" onclick="setTransactionType('Credit')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Credit
+          </button>
+        </div>
+        <div class="type-indicator" id="typeIndicator">
+          <span id="typeLabel">Debit</span> Transaction
+        </div>
+      </div>
+
+      <!-- Form Grid -->
+      <form class="tracker-form" id="trackerForm" onsubmit="handleSubmit(event)">
+
+        <!-- Row 1: Date -->
+        <div class="form-group full-width" style="--delay: 0.1s">
+          <label class="form-label" for="transactionDate">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Transaction Date
+          </label>
+          <div class="input-wrapper">
+            <input type="date" id="transactionDate" name="transactionDate" class="form-input" required />
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Row 2: Spent By -->
+        <div class="form-group" style="--delay: 0.15s">
+          <label class="form-label" for="spentBy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Spent By
+          </label>
+          <div class="input-wrapper">
+            <select id="spentBy" name="spentBy" class="form-input form-select" onchange="handleSpentByChange()" required>
+              <option value="">— Select Person —</option>
+              <option value="Kunal">Kunal</option>
+              <option value="Deepesh">Deepesh</option>
+              <option value="Devraj">Devraj</option>
+              <option value="Others">Others…</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="input-glow"></div>
+          </div>
+          <!-- Custom name field -->
+          <div class="custom-name-wrapper" id="customNameWrapper">
+            <input type="text" id="customName" name="customName" class="form-input custom-name-input" placeholder="Enter name…" autocomplete="off" />
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Row 2b: Amount -->
+        <div class="form-group" style="--delay: 0.2s">
+          <label class="form-label" for="amount">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Amount Spent
+          </label>
+          <div class="input-wrapper amount-wrapper">
+            <span class="currency-symbol">₹</span>
+            <input type="number" id="amount" name="amount" class="form-input amount-input" placeholder="0.00" min="0" step="0.01" required />
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Row 3: Bank Name -->
+        <div class="form-group" style="--delay: 0.25s">
+          <label class="form-label" for="bankName">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Bank Name
+          </label>
+          <div class="input-wrapper">
+            <select id="bankName" name="bankName" class="form-input form-select" onchange="filterCards()" required>
+              <option value="">— Select Bank —</option>
+              <option value="HDFC">HDFC</option>
+              <option value="ICICI">ICICI</option>
+              <option value="AXIS">AXIS</option>
+              <option value="SBI">SBI</option>
+              <option value="IndusIND">IndusIND</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Row 3b: Card -->
+        <div class="form-group" style="--delay: 0.3s">
+          <label class="form-label" for="cardNo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>
+            Card Used
+          </label>
+          <div class="input-wrapper">
+            <select id="cardNo" name="cardNo" class="form-input form-select" required>
+              <option value="">— Select Bank First —</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Row 4: Remarks -->
+        <div class="form-group full-width" style="--delay: 0.35s">
+          <label class="form-label" for="remarks">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Other Remarks
+            <span class="optional-tag">optional</span>
+          </label>
+          <div class="input-wrapper">
+            <textarea id="remarks" name="remarks" class="form-input form-textarea" placeholder="Add any notes about this transaction…" rows="2"></textarea>
+            <div class="input-glow"></div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-group full-width submit-group" style="--delay: 0.4s">
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <span class="submit-label" id="submitLabel">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Submit Transaction
+            </span>
+            <span class="submit-loader" id="submitLoader">
+              <span class="spinner"></span>
+              Saving to Sheet…
+            </span>
+          </button>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+      <div class="toast-icon" id="toastIcon"></div>
+      <div class="toast-message" id="toastMessage">Transaction saved!</div>
+    </div>
+
+    <!-- Recent Transactions (live feed) -->
+    <section class="recent-section">
+      <div class="recent-header">
+        <h2 class="recent-title">Recent Transactions</h2>
+        <button class="refresh-btn" onclick="loadRecentTransactions()" id="refreshBtn" title="Refresh">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M23 4v6h-6M1 20v-6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="recent-list" id="recentList">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p>No transactions yet. Submit your first one above!</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('ServiceWorker registered:', reg.scope))
+          .catch(err => console.log('ServiceWorker error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
