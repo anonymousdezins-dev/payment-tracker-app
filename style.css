@@ -250,7 +250,7 @@ body {
   top: 4px;
   left: 4px;
   height: calc(100% - 8px);
-  width: calc(50% - 4px);
+  width: calc(33.333% - 2.66px);
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   border-radius: 100px;
   transition: transform var(--spring), background var(--transition);
@@ -261,6 +261,12 @@ body {
   transform: translateX(100%);
   background: linear-gradient(135deg, #22d3a3, #06b6d4);
   box-shadow: 0 2px 12px rgba(34,211,163,0.4);
+}
+
+.toggle-slider.dashboard {
+  transform: translateX(200%);
+  background: linear-gradient(135deg, #f59e0b, #f43f5e);
+  box-shadow: 0 2px 12px rgba(245,158,11,0.4);
 }
 
 .toggle-btn {
@@ -278,6 +284,8 @@ body {
   transition: color var(--transition);
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex: 1;
   gap: 6px;
   letter-spacing: 0.01em;
 }
@@ -859,6 +867,98 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
+/* =============================================
+   DASHBOARD SECTION (3D Aesthetic)
+   ============================================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  perspective: 1000px;
+  padding-top: 10px;
+  animation: fadeUp var(--spring) 0.1s both;
+}
+
+.dash-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.5s var(--spring), box-shadow 0.5s var(--spring), background 0.3s ease;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.08), transparent 50%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.dash-card:hover {
+  transform: translateY(-8px) rotateX(4deg) rotateY(-4deg);
+  box-shadow: 20px 20px 40px rgba(0,0,0,0.3), -10px -10px 20px rgba(255,255,255,0.02);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255,255,255,0.1);
+}
+
+.dash-card:hover::before {
+  opacity: 1;
+}
+
+.dash-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transform: translateZ(20px);
+}
+
+.dash-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transform: translateZ(10px);
+}
+
+.dash-value {
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  transform: translateZ(30px);
+  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.dash-card.balance-card .dash-value {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dash-card.credit-card .dash-value {
+  background: linear-gradient(135deg, #22d3a3, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dash-card.debit-card .dash-value {
+  background: linear-gradient(135deg, #f43f5e, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 /* =============================================
    SELECTION
    ============================================= */

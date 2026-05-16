@@ -112,6 +112,10 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Credit
           </button>
+          <button class="toggle-btn" id="btnDashboard" data-type="Dashboard" onclick="setTransactionType('Dashboard')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+            Dashboard
+          </button>
         </div>
         <div class="type-indicator" id="typeIndicator">
           <span id="typeLabel">Debit</span> Transaction
@@ -137,7 +141,7 @@
         <div class="form-group" style="--delay: 0.15s">
           <label class="form-label" for="spentBy">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Spent By
+            <span id="spentByLabelText">Spent By</span>
           </label>
           <div class="input-wrapper">
             <select id="spentBy" name="spentBy" class="form-input form-select" onchange="handleSpentByChange()" required>
@@ -145,6 +149,7 @@
               <option value="Kunal">Kunal</option>
               <option value="Deepesh">Deepesh</option>
               <option value="Devraj">Devraj</option>
+              <option value="Himanshu">Himanshu</option>
               <option value="Others">Others…</option>
             </select>
             <div class="select-arrow">
@@ -198,7 +203,7 @@
         <div class="form-group" style="--delay: 0.3s">
           <label class="form-label" for="cardNo">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/></svg>
-            Card Used
+            <span id="cardUsedLabelText">Card Used</span>
           </label>
           <div class="input-wrapper">
             <select id="cardNo" name="cardNo" class="form-input form-select" required>
@@ -239,6 +244,26 @@
         </div>
 
       </form>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid" id="dashboardSection" style="display: none;">
+        <div class="dash-card balance-card">
+          <div class="dash-icon">💰</div>
+          <div class="dash-label">Net Balance</div>
+          <div class="dash-value" id="dashBalance">₹0.00</div>
+        </div>
+        <div class="dash-card credit-card">
+          <div class="dash-icon">📈</div>
+          <div class="dash-label">Total Credit</div>
+          <div class="dash-value" id="dashCredit">₹0.00</div>
+        </div>
+        <div class="dash-card debit-card">
+          <div class="dash-icon">📉</div>
+          <div class="dash-label">Total Debit</div>
+          <div class="dash-value" id="dashDebit">₹0.00</div>
+        </div>
+      </div>
+
     </main>
 
     <!-- Toast Notification -->

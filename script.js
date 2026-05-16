@@ -6,13 +6,20 @@
 // Replace this with your deployed Google Apps Script Web App URL
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoIFwXBXezwYgxG8Ru1z3TPraXpEB5E_C02QFJlhqLwSXRxo-Yu5yB_w8n20Y2lRkw4w/exec';
 
-// Card catalogue per bank (edit as needed)
-const CARDS = {
-  HDFC:     ['xx7327', 'xx2604', '3254', '7403'],
-  ICICI:    ['3005', '3104', '4008'],
-  AXIS:     ['XX3447', 'xx2998', 'xx3202'],
-  SBI:      ['6274', '1686', '5399', '8810'],
-  IndusIND: ['0834'],
+// Card catalogues — different for Debit and Credit
+const DEBIT_CARDS = {
+  HDFC:     ['xx7327', 'xx2604', 'xx3254', 'xx7403'],
+  ICICI:    ['xx3005', 'xx3104', 'xx4008'],
+  AXIS:     ['xx3447', 'xx2998', 'xx3202'],
+  SBI:      ['xx6274', 'xx1686', 'xx5399', 'xx8810'],
+  IndusIND: ['xx0834'],
+};
+
+const CREDIT_CARDS = {
+  HDFC:     ['xx6292'],
+  ICICI:    ['xx2711'],
+  UCO:      ['xx9329'],
+  UBI:      ['xx3465'],
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────────
@@ -119,20 +126,54 @@ function setTransactionType(type) {
   const slider    = document.getElementById('toggleSlider');
   const btnDebit  = document.getElementById('btnDebit');
   const btnCredit = document.getElementById('btnCredit');
+  const btnDash   = document.getElementById('btnDashboard');
   const typeLabel = document.getElementById('typeLabel');
+  const typeIndicator = document.getElementById('typeIndicator');
+  
+  const form = document.getElementById('trackerForm');
+  const recentSec = document.querySelector('.recent-section');
+  const dashSec = document.getElementById('dashboardSection');
+  
+  const spentByLabelText = document.getElementById('spentByLabelText');
+  const cardUsedLabelText = document.getElementById('cardUsedLabelText');
+
+  btnDebit.classList.remove('active');
+  btnCredit.classList.remove('active');
+  if (btnDash) btnDash.classList.remove('active');
+  slider.classList.remove('credit', 'dashboard');
+
+  if (type === 'Dashboard') {
+    if (btnDash) btnDash.classList.add('active');
+    slider.classList.add('dashboard');
+    if (typeIndicator) typeIndicator.style.display = 'none';
+    form.style.display = 'none';
+    if (recentSec) recentSec.style.display = 'none';
+    if (dashSec) dashSec.style.display = 'grid';
+    renderDashboard();
+    return;
+  }
+
+  if (typeIndicator) typeIndicator.style.display = 'block';
+  form.style.display = 'grid';
+  if (recentSec) recentSec.style.display = 'block';
+  if (dashSec) dashSec.style.display = 'none';
 
   if (type === 'Debit') {
-    slider.classList.remove('credit');
     btnDebit.classList.add('active');
-    btnCredit.classList.remove('active');
     typeLabel.style.color = 'var(--accent-primary)';
+    if(spentByLabelText) spentByLabelText.textContent = 'Spent By';
+    if(cardUsedLabelText) cardUsedLabelText.textContent = 'Card Used';
   } else {
     slider.classList.add('credit');
     btnCredit.classList.add('active');
-    btnDebit.classList.remove('active');
     typeLabel.style.color = 'var(--accent-green)';
+    if(spentByLabelText) spentByLabelText.textContent = 'Credited By';
+    if(cardUsedLabelText) cardUsedLabelText.textContent = 'account No.';
   }
   typeLabel.textContent = type;
+
+  // Rebuild bank dropdown for the current mode
+  updateBankDropdown();
 
   // Subtle card pulse
   const card = document.getElementById('trackerCard');
@@ -159,10 +200,29 @@ function handleSpentByChange() {
   }
 }
 
+// ── BANK DROPDOWN (dynamic per mode) ──────────────────────────────────────────
+function updateBankDropdown() {
+  const catalogue = transactionType === 'Credit' ? CREDIT_CARDS : DEBIT_CARDS;
+  const bankSelect = document.getElementById('bankName');
+  const cardSelect = document.getElementById('cardNo');
+
+  bankSelect.innerHTML = '<option value="">— Select Bank —</option>';
+  Object.keys(catalogue).forEach(bank => {
+    const opt = document.createElement('option');
+    opt.value = bank;
+    opt.textContent = bank;
+    bankSelect.appendChild(opt);
+  });
+
+  // Reset card dropdown too
+  cardSelect.innerHTML = '<option value="">— Select Bank First —</option>';
+}
+
 // ── CARD FILTER BY BANK ───────────────────────────────────────────────────────
 function filterCards() {
   const bank   = document.getElementById('bankName').value;
   const select = document.getElementById('cardNo');
+  const catalogue = transactionType === 'Credit' ? CREDIT_CARDS : DEBIT_CARDS;
 
   select.innerHTML = '';
 
@@ -171,7 +231,7 @@ function filterCards() {
     return;
   }
 
-  const cards = CARDS[bank] || [];
+  const cards = catalogue[bank] || [];
   if (!cards.length) {
     select.innerHTML = '<option value="">No cards registered</option>';
     return;
@@ -188,6 +248,10 @@ function filterCards() {
     opt.textContent = card;
     select.appendChild(opt);
   });
+
+  if (cards.length === 1) {
+    select.value = cards[0];
+  }
 
   // Animate the select
   select.style.animation = 'none';
@@ -405,6 +469,33 @@ function renderRecentList() {
 
     list.appendChild(row);
   });
+  
+  renderDashboard();
+}
+
+function renderDashboard() {
+  let balance = 0;
+  let credit = 0;
+  let debit = 0;
+  
+  recentTransactions.forEach(txn => {
+    const amt = parseFloat(txn.amount) || 0;
+    if (txn.type === 'Credit') {
+      credit += amt;
+      balance += amt;
+    } else if (txn.type === 'Debit') {
+      debit += amt;
+      balance -= amt;
+    }
+  });
+
+  const dashBalance = document.getElementById('dashBalance');
+  const dashCredit = document.getElementById('dashCredit');
+  const dashDebit = document.getElementById('dashDebit');
+  
+  if(dashBalance) dashBalance.textContent = `₹${balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  if(dashCredit) dashCredit.textContent = `₹${credit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  if(dashDebit) dashDebit.textContent = `₹${debit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 }
 
 // ── UI HELPERS ────────────────────────────────────────────────────────────────

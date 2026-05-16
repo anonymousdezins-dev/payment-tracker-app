@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payment-tracker-v1';
+const CACHE_NAME = 'payment-tracker-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -24,5 +24,16 @@ self.addEventListener('fetch', e => {
       // Return cached response if found, else fetch over network
       return response || fetch(e.request);
     })
+  );
+});
+
+// Activate — clean up old caches
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
+    )
   );
 });
